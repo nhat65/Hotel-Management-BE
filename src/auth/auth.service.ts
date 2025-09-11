@@ -1,19 +1,23 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   Logger,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Account } from 'src/entities/account.entity';
 import { RefreshToken } from 'src/entities/refresh-token.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { Request } from 'express';
 import { AccountRole } from 'src/constants/enum';
 import { ConfigService } from '@nestjs/config';
+import { RegisterDto } from './dto/register.dto';
+import { Staff } from 'src/entities/staff.entity';
 
 @Injectable()
 export class AuthService {
@@ -23,8 +27,11 @@ export class AuthService {
     private readonly accountRepository: Repository<Account>,
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepository: Repository<RefreshToken>,
+    @InjectRepository(Staff)
+    private readonly staffRepository: Repository<Staff>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async login(loginDto: LoginDto, request: Request) {
@@ -64,6 +71,61 @@ export class AuthService {
       }
 
       throw new BadRequestException('Login failed');
+    }
+  }
+
+  async register(registerDto: RegisterDto) {
+    const { username, password, confirmPassword, role, staffId } = registerDto;
+    if (password !== confirmPassword) {
+      throw new BadRequestException(
+        'Password must match confirmation password',
+      );
+    }
+    try {
+      return await this.dataSource.transaction(
+        async (transactionalEntityManager) => {
+          const accountRepo = transactionalEntityManager.getRepository(Account);
+          const existingAccount = await accountRepo.exists({
+            where: { username },
+          });
+          if (existingAccount) {
+            throw new ConflictException(`Username has been used`);
+          }
+
+          const existingStaff = await transactionalEntityManager
+            .getRepository(Staff)
+            .exists({
+              where: { id: staffId },
+            });
+          if (!existingStaff) {
+            throw new NotFoundException('Staff not found');
+          }
+
+          const hashedPassword = await bcrypt.hash(password, 10);
+          const newAccount = accountRepo.create({
+            username,
+            password: hashedPassword,
+            role,
+            staffId,
+          });
+          await accountRepo.save(newAccount);
+
+          return {
+            status: true,
+            message: 'Register successfully.',
+          };
+        },
+      );
+    } catch (error) {
+      this.logger.error(`Registration error: ${error.message}`, error.stack);
+      if (
+        error instanceof ConflictException ||
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Registration failed');
     }
   }
 

@@ -13,11 +13,11 @@ import { DataSource, Repository } from 'typeorm';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { Request } from 'express';
 import { AccountRole } from 'src/constants/enum';
 import { ConfigService } from '@nestjs/config';
 import { RegisterDto } from './dto/register.dto';
 import { Staff } from 'src/entities/staff.entity';
+import type { Request } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -129,6 +129,25 @@ export class AuthService {
     }
   }
 
+  async logout(refreshToken: string) {
+    try {
+      const tokenRecord = await this.refreshTokenRepository.findOne({
+        where: { token: refreshToken },
+      });
+      await this.refreshTokenRepository.save({...tokenRecord, ...{
+        token: refreshToken,
+        isRevoked: true,
+      }});
+
+      return {
+        status: true,
+        message: 'Logout successfully',
+      };
+    } catch (error) {
+      throw new BadRequestException('Logout failed');
+    }
+  }
+
   async generateTokens(
     payload: { id: string; username: string; role: AccountRole },
     request: Request,
@@ -147,8 +166,8 @@ export class AuthService {
       accountId: payload.id,
       token: refreshToken,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      ip_address: request.ip,
-      user_agent: request.headers['user-agent'] || 'unknown',
+      ipAddress: request.ip,
+      userAgent: request.headers['user-agent'] || 'unknown',
     };
     await this.refreshTokenRepository.save(newRefreshToken);
 

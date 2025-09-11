@@ -1,0 +1,2 @@
+export const CACHE_KEY_ALL_STAFF = 'all_staff';
+export const CACHE_TTL = 3600 * 1000;

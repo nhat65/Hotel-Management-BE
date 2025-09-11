@@ -39,7 +39,7 @@ export class AuthService {
       const { username, password } = loginDto;
       const account = await this.accountRepository.findOne({
         where: { username },
-        select: ['id', 'username', 'password', 'role'],
+        select: ['id', 'username', 'password', 'role', 'staffId'],
       });
       if (!account) {
         throw new UnauthorizedException('Invalid username!');
@@ -51,7 +51,8 @@ export class AuthService {
       }
 
       const payload = {
-        id: account.id,
+        id: account.staffId,
+        accountId: account.id,
         username: account.username,
         role: account.role,
       };
@@ -134,10 +135,13 @@ export class AuthService {
       const tokenRecord = await this.refreshTokenRepository.findOne({
         where: { token: refreshToken },
       });
-      await this.refreshTokenRepository.save({...tokenRecord, ...{
-        token: refreshToken,
-        isRevoked: true,
-      }});
+      await this.refreshTokenRepository.save({
+        ...tokenRecord,
+        ...{
+          token: refreshToken,
+          isRevoked: true,
+        },
+      });
 
       return {
         status: true,
@@ -149,7 +153,12 @@ export class AuthService {
   }
 
   async generateTokens(
-    payload: { id: string; username: string; role: AccountRole },
+    payload: {
+      id: string;
+      username: string;
+      role: AccountRole;
+      accountId: string;
+    },
     request: Request,
   ) {
     const accessToken = await this.generateAccessToken(
@@ -163,7 +172,7 @@ export class AuthService {
       payload.role,
     );
     const newRefreshToken = {
-      accountId: payload.id,
+      accountId: payload.accountId,
       token: refreshToken,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       ipAddress: request.ip,

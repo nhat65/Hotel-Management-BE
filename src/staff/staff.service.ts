@@ -4,9 +4,14 @@ import {
   Inject,
   Injectable,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CACHE_KEY_ALL_STAFF, CACHE_TTL } from 'src/constants/cache';
+import {
+  CACHE_KEY_ALL_STAFF,
+  CACHE_KEY_STAFF_PROFILE,
+  CACHE_TTL,
+} from 'src/constants/cache';
 import { Staff } from 'src/entities/staff.entity';
 import { Repository } from 'typeorm';
 
@@ -51,6 +56,62 @@ export class StaffService {
     } catch (error) {
       this.logger.error(`Get all staff error: ${error.message}`, error.stack);
       throw new BadRequestException('Cannot get staff list');
+    }
+  }
+
+  async getProfile(staffId: string) {
+    try {
+      const cachedProfile = await this.cacheManager.get<Staff>(
+        CACHE_KEY_STAFF_PROFILE + staffId,
+      );
+      if (cachedProfile) {
+        return {
+          status: true,
+          message: 'Get staff profile from cache successfully',
+          data: cachedProfile,
+        };
+      }
+
+      const profile = await this.staffRepository.findOne({
+        where: { id: staffId },
+        select: [
+          'id',
+          'fullName',
+          'phoneNumber',
+          'avatarUrl',
+          'address',
+          'dayOfBirth',
+          'position',
+          'email',
+          'createdAt',
+        ],
+      });
+      if (!profile) {
+        throw new NotFoundException('Staff not found');
+      }
+      await this.cacheManager.set(
+        CACHE_KEY_STAFF_PROFILE + staffId,
+        profile,
+        CACHE_TTL,
+      );
+
+      return {
+        status: true,
+        message: 'Get staff profile successfully',
+        data: profile,
+      };
+    } catch (error) {
+      this.logger.error(
+        'Get staff profile error: ' + error.message,
+        error.stack,
+      );
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Cannot get staff profile');
     }
   }
 }

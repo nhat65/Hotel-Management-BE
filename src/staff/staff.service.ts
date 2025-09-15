@@ -13,7 +13,8 @@ import {
   CACHE_TTL,
 } from 'src/constants/cache';
 import { Staff } from 'src/entities/staff.entity';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
+import { CreateStaffDto } from './dto/create-staff.dto';
 
 @Injectable()
 export class StaffService {
@@ -105,6 +106,39 @@ export class StaffService {
         'Get staff profile error: ' + error.message,
         error.stack,
       );
+    }
+  }
+  
+  async createStaff(
+    createStaffDto: CreateStaffDto,
+    adminId: string,
+    file: Express.Multer.File,
+  ) {
+    try {
+      const existingStaff = await this.staffRepository.exists({
+        where: { id: adminId },
+      });
+      if (!existingStaff) {
+        throw new NotFoundException('Admin not found');
+      }
+
+      createStaffDto.avatarUrl = file
+        ? `/public/uploads/staffs/${file.filename}`
+        : '';
+
+      const newStaffPayload = {
+        ...createStaffDto,
+        createdBy: adminId,
+      };
+      const newStaff = await this.staffRepository.save(newStaffPayload);
+      console.log(newStaffPayload);
+      return {
+        status: true,
+        message: 'Create staff successfully',
+        data: newStaff,
+      };
+    } catch (error) {
+      this.logger.error(`Create staff error:${error.message}`, error.stack);
       if (
         error instanceof NotFoundException ||
         error instanceof BadRequestException

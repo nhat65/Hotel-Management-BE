@@ -30,7 +30,7 @@ export class Staff {
   fullName: string;
 
   @Column({ name: 'phone_number' })
-  phoneNumber: number;
+  phoneNumber: string;
 
   @Column({ name: 'avatar_url', nullable: true })
   avatarUrl: string;

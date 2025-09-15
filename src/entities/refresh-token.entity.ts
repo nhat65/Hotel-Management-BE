@@ -17,7 +17,7 @@ export class RefreshToken {
   @Column({ type: 'uuid', name: 'account_id' })
   accountId: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 500 })
   token: string;
 
   @Column({ type: 'timestamp', name: 'expires_at' })

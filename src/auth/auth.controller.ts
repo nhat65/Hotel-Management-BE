@@ -19,7 +19,7 @@ export class AuthController {
   }
 
   @Post('logout')
-  logout(@Req() request: Request){
-    return this.authService.logout(request.cookies['refresh_token'])
+  logout(@Req() request: Request) {
+    return this.authService.logout(request.cookies['refresh_token']);
   }
 }

@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   Req,
   UploadedFile,
   UseGuards,
@@ -18,6 +19,7 @@ import { RolesGuard } from 'src/common/guards/role.guard';
 import { UploadImageInterceptor } from 'src/common/interceptors/upload-file.interceptor';
 import { CreateStaffDto } from './dto/create-staff.dto';
 import { FileSizeValidationPipe } from 'src/common/pipes/file-validation.pipe';
+import { UpdateStaffDto } from './dto/update.staff.dto';
 
 @Controller('staff')
 @UseGuards(JwtAuthGuard)
@@ -33,8 +35,7 @@ export class StaffController {
 
   @Get('/profile')
   async getProfile(@Req() request: Request) {
-    const staffId = request['user'].id;
-    return await this.staffService.getProfile(staffId);
+    return await this.staffService.getProfile(request['user'].id);
   }
 
   @Get('/:staffId/profile')
@@ -46,13 +47,14 @@ export class StaffController {
 
   @Post('/create')
   @UseInterceptors(UploadImageInterceptor('image'))
+  @Roles(AccountRole.ADMIN)
+  @UseGuards(RolesGuard)
   async createStaff(
     @Body() createStaffDto: CreateStaffDto,
     @UploadedFile(FileSizeValidationPipe) file: Express.Multer.File,
     @Req() request: Request,
   ) {
-    const adminId = request['user'].id;
-    return await this.staffService.createStaff(createStaffDto, adminId, file);
+    return await this.staffService.createStaff(createStaffDto, request['user'].id, file);
   }
 
   @Delete('/:staffId')
@@ -60,5 +62,15 @@ export class StaffController {
   @UseGuards(RolesGuard)
   async delete(@Param('staffId') staffId: string) {
     return await this.staffService.deleteStaff(staffId);
+  }
+
+  @Put('/update')
+  @UseInterceptors(UploadImageInterceptor('image'))
+  async update(
+    @Body() updateStaffDto: UpdateStaffDto,
+    @UploadedFile(FileSizeValidationPipe) file: Express.Multer.File,
+    @Req() request: Request,
+  ) {
+    return await this.staffService.updateStaff(updateStaffDto, request['user'].id, file);
   }
 }

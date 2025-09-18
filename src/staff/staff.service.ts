@@ -17,6 +17,7 @@ import { DataSource, Not, Repository } from 'typeorm';
 import { CreateStaffDto } from './dto/create-staff.dto';
 import { Account } from 'src/entities/account.entity';
 import { RefreshToken } from 'src/entities/refresh-token.entity';
+import { UpdateStaffDto } from './dto/update.staff.dto';
 
 @Injectable()
 export class StaffService {
@@ -151,7 +152,54 @@ export class StaffService {
       ) {
         throw error;
       }
-      throw new BadRequestException('Cannot get staff profile');
+      throw new BadRequestException('Cannot create staff');
+    }
+  }
+
+  async updateStaff(
+    updateStaffDto: UpdateStaffDto,
+    updatedBy: string,
+    file: Express.Multer.File,
+  ) {
+    try {
+      if (updatedBy !== updateStaffDto.id) {
+        const existingAdmin = await this.staffRepository.exists({
+          where: { id: updatedBy },
+        });
+        if (!existingAdmin) {
+          throw new NotFoundException('Admin not found');
+        }
+      }
+
+      const existingStaff = await this.staffRepository.exists({
+        where: { id: updateStaffDto.id },
+      });
+      if (!existingStaff) {
+        throw new NotFoundException('Admin not found');
+      }
+
+      updateStaffDto.avatarUrl = file
+        ? `/public/uploads/staffs/${file.filename}`
+        : '';
+      const updateStaffPayload = {
+        ...updateStaffDto,
+        updatedBy: updatedBy,
+      };
+      const newStaff = await this.staffRepository.save(updateStaffPayload);
+      return {
+        status: true,
+        message: 'Update staff successfully',
+        data: newStaff,
+      };
+    } catch (error) {
+      this.logger.error(`Update staff error:${error.message}`, error.stack);
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Cannot update staff');
     }
   }
 

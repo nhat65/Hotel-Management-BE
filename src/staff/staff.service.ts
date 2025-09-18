@@ -13,8 +13,10 @@ import {
   CACHE_TTL,
 } from 'src/constants/cache';
 import { Staff } from 'src/entities/staff.entity';
-import { Not, Repository } from 'typeorm';
+import { DataSource, Not, Repository } from 'typeorm';
 import { CreateStaffDto } from './dto/create-staff.dto';
+import { Account } from 'src/entities/account.entity';
+import { RefreshToken } from 'src/entities/refresh-token.entity';
 
 @Injectable()
 export class StaffService {
@@ -22,6 +24,11 @@ export class StaffService {
   constructor(
     @InjectRepository(Staff)
     private readonly staffRepository: Repository<Staff>,
+    @InjectRepository(Account)
+    private readonly accountRepository: Repository<Account>,
+    @InjectRepository(RefreshToken)
+    private readonly refreshTokenRepository: Repository<RefreshToken>,
+    private readonly dataSource: DataSource,
     @Inject(CACHE_MANAGER)
     private readonly cacheManager: Cache,
   ) {}
@@ -108,7 +115,7 @@ export class StaffService {
       );
     }
   }
-  
+
   async createStaff(
     createStaffDto: CreateStaffDto,
     adminId: string,
@@ -131,7 +138,6 @@ export class StaffService {
         createdBy: adminId,
       };
       const newStaff = await this.staffRepository.save(newStaffPayload);
-      console.log(newStaffPayload);
       return {
         status: true,
         message: 'Create staff successfully',
@@ -146,6 +152,60 @@ export class StaffService {
         throw error;
       }
       throw new BadRequestException('Cannot get staff profile');
+    }
+  }
+
+  async deleteStaff(staffId: string) {
+    try {
+      return await this.dataSource.transaction(
+        async (transactionalEntityManager) => {
+          const staffRepo = transactionalEntityManager.getRepository(Staff);
+          const existingStaff = await staffRepo.findOne({
+            where: { id: staffId },
+            select: ['id'],
+          });
+          if (!existingStaff) {
+            throw new NotFoundException('Staff not found');
+          }
+
+          const existingAccount = await transactionalEntityManager
+            .getRepository(Account)
+            .findOne({
+              where: { staffId: existingStaff.id },
+              select: ['id'],
+            });
+          if (existingAccount) {
+            const tokenRepo = transactionalEntityManager.getRepository(RefreshToken);
+            await tokenRepo.update(
+              {
+                accountId: existingAccount.id,
+                isRevoked: false,
+              },
+              {
+                isRevoked: true,
+              },
+            );
+          }
+
+          const result = await staffRepo.softDelete({ id: staffId });
+          if (!result.affected) {
+            throw new NotFoundException('Staff not found or already deleted');
+          }
+          return {
+            status: true,
+            message: 'Delete staff successfully',
+          };
+        },
+      );
+    } catch (error) {
+      this.logger.error(`Delete staff error:${error.message}`, error.stack);
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Cannot delete staff');
     }
   }
 }

@@ -16,7 +16,7 @@ export class Invoice {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'time' })
+  @Column({ name: 'time', type: 'date' })
   time: Date;
 
   @Column({ name: 'room_amount', type: 'decimal', precision: 8, scale: 2 })
@@ -25,7 +25,7 @@ export class Invoice {
   @Column({ name: 'service_amount', type: 'decimal', precision: 8, scale: 2 })
   serviceAmount: number;
 
-  @Column({ type: 'decimal', precision: 8, scale: 2 })
+  @Column({ name: 'sub_total', type: 'decimal', precision: 8, scale: 2 })
   subtotal: number;
 
   @Column({ name: 'tax_amount', type: 'decimal', precision: 8, scale: 2 })

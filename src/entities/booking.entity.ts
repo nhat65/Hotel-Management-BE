@@ -28,10 +28,10 @@ export class Booking {
   @Column({ type: 'enum', enum: BookingStatus })
   status: BookingStatus;
 
-  @Column({ name: 'expected_check_in' })
+  @Column({ name: 'expected_check_in', type: 'date' })
   expectedCheckIn: Date;
 
-  @Column({ name: 'expected_check_out' })
+  @Column({ name: 'expected_check_out', type: 'date' })
   expectedCheckOut: Date;
 
   @Column({ name: 'special_requests', nullable: true })

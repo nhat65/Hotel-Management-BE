@@ -7,6 +7,7 @@ import { databaseConfig } from './configs/database.config';
 import { AuthModule } from './auth/auth.module';
 import { StaffModule } from './staff/staff.module';
 import { CacheModule } from '@nestjs/cache-manager';
+import { BookingModule } from './booking/booking.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { CacheModule } from '@nestjs/cache-manager';
     CacheModule.register({ isGlobal: true }),
     AuthModule,
     StaffModule,
+    BookingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

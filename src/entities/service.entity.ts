@@ -8,6 +8,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { BookingDetail } from './booking-detail.entity';
+import { BookingService } from './booking-service.entity';
 
 export enum ServiceStatus {
   ACTIVE = 'active',
@@ -40,6 +41,6 @@ export class Service {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @OneToMany(() => BookingDetail, (bookingDetail) => bookingDetail.service)
-  bookingDetails: BookingDetail[];
+  @OneToMany(() => BookingService, (bookingService) => bookingService.service)
+  bookingServices: BookingService[];
 }

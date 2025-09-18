@@ -108,7 +108,7 @@ export class StaffService {
       );
     }
   }
-  
+
   async createStaff(
     createStaffDto: CreateStaffDto,
     adminId: string,
@@ -131,7 +131,6 @@ export class StaffService {
         createdBy: adminId,
       };
       const newStaff = await this.staffRepository.save(newStaffPayload);
-      console.log(newStaffPayload);
       return {
         status: true,
         message: 'Create staff successfully',

@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { BookingDetail } from './booking-detail.entity';
 import { RoomEquipment } from './room-equipment.entity';
+import { BookingRoom } from './booking-room.entity';
 
 export enum RoomStatus {
   AVAILABLE = 'available',
@@ -51,9 +52,9 @@ export class Room {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @OneToMany(() => BookingDetail, (bookingDetail) => bookingDetail.room)
-  bookingDetails: BookingDetail[];
-
   @OneToMany(() => RoomEquipment, (roomEquipment) => roomEquipment.room)
   equipments: RoomEquipment[];
+
+  @OneToMany(() => BookingRoom, (BookingRoom) => BookingRoom.room)
+  bookingRooms: BookingRoom[];
 }

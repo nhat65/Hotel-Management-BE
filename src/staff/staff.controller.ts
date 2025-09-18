@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -33,14 +34,14 @@ export class StaffController {
   @Get('/profile')
   async getProfile(@Req() request: Request) {
     const staffId = request['user'].id;
-    return this.staffService.getProfile(staffId);
+    return await this.staffService.getProfile(staffId);
   }
 
   @Get('/:staffId/profile')
   @Roles(AccountRole.ADMIN)
   @UseGuards(RolesGuard)
   async getStaffProfile(@Param('staffId') staffId: string) {
-    return this.staffService.getProfile(staffId);
+    return await this.staffService.getProfile(staffId);
   }
 
   @Post('/create')
@@ -51,6 +52,13 @@ export class StaffController {
     @Req() request: Request,
   ) {
     const adminId = request['user'].id;
-    return this.staffService.createStaff(createStaffDto, adminId, file);
+    return await this.staffService.createStaff(createStaffDto, adminId, file);
+  }
+
+  @Delete('/:staffId')
+  @Roles(AccountRole.ADMIN)
+  @UseGuards(RolesGuard)
+  async delete(@Param('staffId') staffId: string) {
+    return await this.staffService.deleteStaff(staffId);
   }
 }

@@ -8,7 +8,10 @@ import { Account } from 'src/entities/account.entity';
 import { RefreshToken } from 'src/entities/refresh-token.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Staff, Account, RefreshToken]), JwtModule.register({})],
+  imports: [
+    TypeOrmModule.forFeature([Staff, Account, RefreshToken]),
+    JwtModule.register({}),
+  ],
   controllers: [StaffController],
   providers: [StaffService],
 })

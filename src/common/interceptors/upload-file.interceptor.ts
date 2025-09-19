@@ -1,12 +1,16 @@
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { MAX_FILE_SIZE } from 'src/constants/upload.constants';
 
-export function UploadImageInterceptor(fieldName: string) {
+export function UploadImageInterceptor(
+  fieldName: string,
+  folderPath: string = 'common',
+) {
   return FileInterceptor(fieldName, {
     storage: diskStorage({
       destination: (req, file, callback) => {
-        const dynamicPath = `./public/uploads/staffs/`;
+        const dynamicPath = `./public/uploads/${folderPath}/`;
 
         const fs = require('fs');
         if (!fs.existsSync(dynamicPath)) {
@@ -21,7 +25,7 @@ export function UploadImageInterceptor(fieldName: string) {
         callback(null, `${fieldName}-${uniqueSuffix}${ext}`);
       },
     }),
-    limits: { fileSize: 2 * 1024 * 1024 },
+    limits: { fileSize: MAX_FILE_SIZE },
     fileFilter: (req, file, callback) => {
       if (!file.mimetype.match(/^image\//)) {
         return callback(new Error('This is not image file!'), false);

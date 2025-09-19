@@ -60,7 +60,7 @@ export class Staff {
   @Column({ name: 'updated_by', nullable: true })
   updatedBy: string;
 
-  @DeleteDateColumn({ name: 'deleted_at', nullable: true})
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
   deletedAt?: Date;
 
   @OneToOne(() => Account, (account) => account.staff)

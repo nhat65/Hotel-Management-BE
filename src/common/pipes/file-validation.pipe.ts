@@ -4,16 +4,16 @@ import {
   BadRequestException,
   ArgumentMetadata,
 } from '@nestjs/common';
+import {
+  ALLOWED_FILE_TYPES,
+  MAX_FILE_SIZE,
+  UploadFolder,
+} from 'src/constants/upload.constants';
 
 @Injectable()
 export class FileSizeValidationPipe implements PipeTransform {
-  private readonly allowedTypes = [
-    'image/jpeg',
-    'image/jpg',
-    'image/png',
-    'image/gif',
-  ];
-  private readonly maxSize = 5 * 1024 * 1024;
+  private readonly allowedTypes = ALLOWED_FILE_TYPES;
+  private readonly maxSize = MAX_FILE_SIZE;
 
   transform(value: Express.Multer.File, metadata: ArgumentMetadata) {
     if (!value) {

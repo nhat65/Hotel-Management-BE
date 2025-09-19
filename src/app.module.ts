@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { StaffModule } from './staff/staff.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { BookingModule } from './booking/booking.module';
+import { RoomModule } from './room/room.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { BookingModule } from './booking/booking.module';
     AuthModule,
     StaffModule,
     BookingModule,
+    RoomModule,
   ],
   controllers: [AppController],
   providers: [AppService],

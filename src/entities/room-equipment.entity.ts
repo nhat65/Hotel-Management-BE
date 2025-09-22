@@ -7,6 +7,7 @@ import {
   ManyToOne,
   OneToMany,
   JoinColumn,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Room } from './room.entity';
 import { EquipmentMaintenance } from './equipment-maintenance.entity';
@@ -20,7 +21,7 @@ export enum EquipmentStatus {
 
 @Entity('room_equipment')
 export class RoomEquipment {
-  @PrimaryColumn('uuid')
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()

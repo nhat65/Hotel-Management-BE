@@ -9,6 +9,7 @@ import { StaffModule } from './staff/staff.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { BookingModule } from './booking/booking.module';
 import { RoomModule } from './room/room.module';
+import { RoomEquipmentModule } from './room-equipment/room-equipment.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { RoomModule } from './room/room.module';
     StaffModule,
     BookingModule,
     RoomModule,
+    RoomEquipmentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

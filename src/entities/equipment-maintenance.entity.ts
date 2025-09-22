@@ -6,13 +6,14 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { RoomEquipment } from './room-equipment.entity';
 import { Staff } from './staff.entity';
 
 @Entity('equipment_maintenance')
 export class EquipmentMaintenance {
-  @PrimaryColumn('uuid')
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column({ name: 'maintenance_type' })

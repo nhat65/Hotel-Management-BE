@@ -13,6 +13,7 @@ import { Room } from 'src/entities/room.entity';
 import { EquipmentStatus } from 'src/constants/enum';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { CACHE_KEY_EQUIPMENTS, CACHE_TTL } from 'src/constants/cache';
+import { UpdateEquipmentDto } from './dto/update-equipment.dto';
 
 @Injectable()
 export class RoomEquipmentService {
@@ -64,16 +65,17 @@ export class RoomEquipmentService {
       if (cachedEquipments) {
         return {
           status: true,
-          message:
-            cachedEquipments.length
-              ? 'Get equipments from cache successfully!'
-              : 'No Equipments found in cache',
+          message: cachedEquipments.length
+            ? 'Get equipments from cache successfully!'
+            : 'No Equipments found in cache',
           data: cachedEquipments,
         };
       }
 
       const condition =
-        status === EquipmentStatus.ALL ? {} : { status: status as EquipmentStatus };
+        status === EquipmentStatus.ALL
+          ? {}
+          : { status: status as EquipmentStatus };
       const equipments = await this.roomEquipmentRepository.find({
         select: [
           'id',
@@ -93,15 +95,54 @@ export class RoomEquipmentService {
       );
       return {
         status: true,
-        message:
-          equipments.length
-            ? 'Get equipments from cache successfully!'
-            : 'No equipments found in cache',
+        message: equipments.length
+          ? 'Get equipments from cache successfully!'
+          : 'No equipments found in cache',
         data: equipments,
       };
     } catch (error) {
       this.logger.error('Failed get room equipment', error.stack);
       throw new BadRequestException('Cannot get equipments');
+    }
+  }
+  
+  async update(updateEquipmentDto: UpdateEquipmentDto, equipmentId: string) {
+    try {
+      const existingEquipment = await this.roomEquipmentRepository.findOne({
+        where: { id: equipmentId },
+      });
+      if (!existingEquipment) {
+        throw new NotFoundException('Equipment not found');
+      }
+
+      if (updateEquipmentDto.roomDetailId) {
+        const existingRoom = await this.roomRepository.exists({
+          where: { id: updateEquipmentDto.roomDetailId },
+        });
+        if (!existingRoom) {
+          throw new NotFoundException('Room not found');
+        }
+        updateEquipmentDto.status = EquipmentStatus.IN_USE;
+      }
+
+      const result = await this.roomEquipmentRepository.save({
+        ...existingEquipment,
+        ...updateEquipmentDto,
+      });
+      return {
+        status: true,
+        message: 'Update equipment successfully',
+        data: result,
+      };
+    } catch (error) {
+      this.logger.error('Failed to update room equipment', error.stack);
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Cannot update equipment');
     }
   }
 }

@@ -18,6 +18,7 @@ import { CreateStaffDto } from './dto/create-staff.dto';
 import { Account } from 'src/entities/account.entity';
 import { RefreshToken } from 'src/entities/refresh-token.entity';
 import { UpdateStaffDto } from './dto/update.staff.dto';
+import { UploadFolder } from 'src/constants/upload.constants';
 
 @Injectable()
 export class StaffService {
@@ -131,7 +132,7 @@ export class StaffService {
       }
 
       createStaffDto.avatarUrl = file
-        ? `/public/uploads/staffs/${file.filename}`
+        ? `/public/uploads/${UploadFolder.STAFFS}/${file.filename}`
         : '';
 
       const newStaffPayload = {
@@ -223,7 +224,8 @@ export class StaffService {
               select: ['id'],
             });
           if (existingAccount) {
-            const tokenRepo = transactionalEntityManager.getRepository(RefreshToken);
+            const tokenRepo =
+              transactionalEntityManager.getRepository(RefreshToken);
             await tokenRepo.update(
               {
                 accountId: existingAccount.id,

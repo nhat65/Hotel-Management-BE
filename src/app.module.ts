@@ -10,6 +10,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { BookingModule } from './booking/booking.module';
 import { RoomModule } from './room/room.module';
 import { RoomEquipmentModule } from './room-equipment/room-equipment.module';
+import { MaintenanceModule } from './maintenance/maintenance.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { RoomEquipmentModule } from './room-equipment/room-equipment.module';
     BookingModule,
     RoomModule,
     RoomEquipmentModule,
+    MaintenanceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

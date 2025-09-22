@@ -50,7 +50,7 @@ export class RoomController {
     return await this.roomService.getRooms(status);
   }
 
-  @Get('/:roomId')
+  @Get('/:roomId/detail')
   @Roles(AccountRole.ADMIN, AccountRole.RECEPTIONIST)
   @UseGuards(RolesGuard)
   async getDetail(@Param('roomId') roomId: string) {

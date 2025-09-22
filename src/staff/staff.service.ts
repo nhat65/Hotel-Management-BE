@@ -43,22 +43,19 @@ export class StaffService {
         return {
           status: true,
           message:
-            cachedStaffs.length > 0
+            cachedStaffs.length
               ? 'Get all staffs from cache successfully!'
               : 'No staffs found in cache',
           data: cachedStaffs,
         };
       }
 
-      const staffs = await this.staffRepository.find({
-        select: ['id', 'fullName', 'dayOfBirth', 'phoneNumber', 'position'],
-      });
+      const staffs = await this.staffRepository.find();
       await this.cacheManager.set(CACHE_KEY_ALL_STAFF, staffs, CACHE_TTL);
-
       return {
         status: true,
         message:
-          staffs.length > 0
+          staffs.length
             ? 'Get all staffs from cache successfully!'
             : 'No staffs found in cache',
         data: staffs,
@@ -84,17 +81,6 @@ export class StaffService {
 
       const profile = await this.staffRepository.findOne({
         where: { id: staffId },
-        select: [
-          'id',
-          'fullName',
-          'phoneNumber',
-          'avatarUrl',
-          'address',
-          'dayOfBirth',
-          'position',
-          'email',
-          'createdAt',
-        ],
       });
       if (!profile) {
         throw new NotFoundException('Staff not found');

@@ -77,15 +77,6 @@ export class RoomEquipmentService {
           ? {}
           : { status: status as EquipmentStatus };
       const equipments = await this.roomEquipmentRepository.find({
-        select: [
-          'id',
-          'name',
-          'category',
-          'quantity',
-          'status',
-          'note',
-          'roomDetailId',
-        ],
         where: condition,
       });
       await this.cacheManager.set(

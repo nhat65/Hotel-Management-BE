@@ -94,16 +94,6 @@ export class RoomService {
       const condition =
         status === RoomStatus.ALL ? {} : { status: status as RoomStatus };
       const rooms = await this.roomRepository.find({
-        select: [
-          'id',
-          'number',
-          'type',
-          'capacity',
-          'floor',
-          'image',
-          'description',
-          'pricePerDay',
-        ],
         where: condition,
       });
       await this.cacheManager.set(CACHE_KEY_ROOMS + status, rooms, CACHE_TTL);
@@ -139,25 +129,6 @@ export class RoomService {
       const roomDetail = await this.roomRepository.findOne({
         where: { id: roomId },
         relations: { equipments: true },
-        select: {
-          id: true,
-          number: true,
-          type: true,
-          status: true,
-          capacity: true,
-          floor: true,
-          image: true,
-          description: true,
-          pricePerDay: true,
-          equipments: {
-            id: true,
-            name: true,
-            category: true,
-            quantity: true,
-            status: true,
-            note: true,
-          },
-        },
       });
       if (!roomDetail) {
         throw new NotFoundException('Room not found');

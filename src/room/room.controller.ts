@@ -1,6 +1,8 @@
 import {
   Body,
   Controller,
+  Get,
+  Param,
   Post,
   Req,
   UploadedFile,
@@ -16,6 +18,7 @@ import { CreateRoomDto } from './dto/create-room.dto';
 import { FileSizeValidationPipe } from 'src/common/pipes/file-validation.pipe';
 import { UploadFolder } from 'src/constants/upload.constants';
 import { UploadImageInterceptor } from 'src/common/interceptors/upload-file.interceptor';
+import { RoomStatus } from 'src/constants/enum';
 
 @Controller('room')
 @UseGuards(JwtAuthGuard)
@@ -36,5 +39,12 @@ export class RoomController {
       request['user'].id,
       file,
     );
+  }
+
+  @Get('/:status')
+  @Roles(AccountRole.ADMIN, AccountRole.RECEPTIONIST)
+  @UseGuards(RolesGuard)
+  async getRooms(@Param('status') status: RoomStatus) {
+    return await this.roomService.getRooms(status);
   }
 }

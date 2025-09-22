@@ -11,6 +11,7 @@ import { RoomEquipment } from './room-equipment.entity';
 import { BookingRoom } from './booking-room.entity';
 
 export enum RoomStatus {
+  ALL = 'all',
   AVAILABLE = 'available',
   OCCUPIED = 'occupied',
   MAINTENANCE = 'maintenance',

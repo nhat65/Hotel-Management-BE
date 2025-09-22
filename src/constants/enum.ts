@@ -26,6 +26,7 @@ export enum ServiceStatus {
 }
 
 export enum RoomStatus {
+  ALL = 'all',
   AVAILABLE = 'available',
   OCCUPIED = 'occupied',
   MAINTENANCE = 'maintenance',

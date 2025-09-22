@@ -13,6 +13,7 @@ import { Room } from './room.entity';
 import { EquipmentMaintenance } from './equipment-maintenance.entity';
 
 export enum EquipmentStatus {
+  ALL = 'all',
   AVAILABLE = 'available',
   IN_USE = 'in_use',
   BROKEN = 'broken',

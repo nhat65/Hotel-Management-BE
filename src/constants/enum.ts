@@ -40,6 +40,7 @@ export enum PaymentMethod {
 }
 
 export enum EquipmentStatus {
+  ALL = 'all',
   AVAILABLE = 'available',
   IN_USE = 'in_use',
   BROKEN = 'broken',

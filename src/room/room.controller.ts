@@ -47,4 +47,11 @@ export class RoomController {
   async getRooms(@Param('status') status: RoomStatus) {
     return await this.roomService.getRooms(status);
   }
+  
+  @Get('/:roomId')
+  @Roles(AccountRole.ADMIN, AccountRole.RECEPTIONIST)
+  @UseGuards(RolesGuard)
+  async getDetail(@Param('roomId') roomId: string) {
+    return this.roomService.getDetail(roomId);
+  }
 }

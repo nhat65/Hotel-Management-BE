@@ -12,8 +12,13 @@ import { CreateRoomDto } from './dto/create-room.dto';
 import { Staff } from 'src/entities/staff.entity';
 import { Multer } from 'multer';
 import { UploadFolder } from 'src/constants/upload.constants';
+import { RoomEquipment } from 'src/entities/room-equipment.entity';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
-import { CACHE_KEY_ROOMS, CACHE_TTL } from 'src/constants/cache';
+import {
+  CACHE_KEY_ROOM_DETAIL,
+  CACHE_KEY_ROOMS,
+  CACHE_TTL,
+} from 'src/constants/cache';
 
 @Injectable()
 export class RoomService {
@@ -23,6 +28,8 @@ export class RoomService {
     private readonly roomRepository: Repository<Room>,
     @InjectRepository(Staff)
     private readonly staffRepository: Repository<Staff>,
+    @InjectRepository(RoomEquipment)
+    private readonly equipmentRepository: Repository<RoomEquipment>,
     @Inject(CACHE_MANAGER)
     private readonly cacheManager: Cache,
   ) {}
@@ -102,15 +109,78 @@ export class RoomService {
 
       return {
         status: true,
-        message:
-          rooms.length
-            ? `Get ${status} rooms successfully!`
-            : 'No room found',
+        message: rooms.length
+          ? `Get ${status} rooms successfully!`
+          : 'No room found',
         data: rooms,
       };
     } catch (error) {
       this.logger.error(`Get rooms error: ${error.message}`, error.stack);
       throw new BadRequestException('Cannot get rooms');
+    }
+  }
+
+  async getDetail(roomId: string) {
+    try {
+      const cachedRoom = await this.cacheManager.get<any[]>(
+        CACHE_KEY_ROOM_DETAIL + roomId,
+      );
+      if (cachedRoom) {
+        return {
+          status: true,
+          message: cachedRoom.length
+            ? 'Get room from cache successfully!'
+            : 'No room found in cache',
+          data: cachedRoom,
+        };
+      }
+
+      const roomDetail = await this.roomRepository.findOne({
+        where: { id: roomId },
+        relations: { equipments: true },
+        select: {
+          id: true,
+          number: true,
+          type: true,
+          status: true,
+          capacity: true,
+          floor: true,
+          image: true,
+          description: true,
+          pricePerDay: true,
+          equipments: {
+            id: true,
+            name: true,
+            category: true,
+            quantity: true,
+            status: true,
+            note: true,
+          },
+        },
+      });
+      if (!roomDetail) {
+        throw new NotFoundException('Room not found');
+      }
+
+      await this.cacheManager.set(
+        CACHE_KEY_ROOM_DETAIL + roomId,
+        roomDetail,
+        CACHE_TTL,
+      );
+      return {
+        status: true,
+        message: 'Get room detail successfully!',
+        data: roomDetail,
+      };
+    } catch (error) {
+      this.logger.error(`Get room detail error: ${error.message}`, error.stack);
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Cannot get room detail');
     }
   }
 }

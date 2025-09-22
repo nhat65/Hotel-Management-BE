@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   Req,
   UploadedFile,
   UseGuards,
@@ -19,6 +20,7 @@ import { FileSizeValidationPipe } from 'src/common/pipes/file-validation.pipe';
 import { UploadFolder } from 'src/constants/upload.constants';
 import { UploadImageInterceptor } from 'src/common/interceptors/upload-file.interceptor';
 import { RoomStatus } from 'src/constants/enum';
+import { updateRoomDto } from './dto/update-room.dto';
 
 @Controller('room')
 @UseGuards(JwtAuthGuard)
@@ -47,11 +49,29 @@ export class RoomController {
   async getRooms(@Param('status') status: RoomStatus) {
     return await this.roomService.getRooms(status);
   }
-  
+
   @Get('/:roomId')
   @Roles(AccountRole.ADMIN, AccountRole.RECEPTIONIST)
   @UseGuards(RolesGuard)
   async getDetail(@Param('roomId') roomId: string) {
     return this.roomService.getDetail(roomId);
+  }
+
+  @Put('/:roomId')
+  @UseInterceptors(UploadImageInterceptor('image', UploadFolder.ROOMS))
+  @Roles(AccountRole.ADMIN)
+  @UseGuards(RolesGuard)
+  async update(
+    @Param('roomId') roomId: string,
+    @Body() updateRoomDto: updateRoomDto,
+    @UploadedFile(FileSizeValidationPipe) file: Express.Multer.File,
+    @Req() request: Request,
+  ) {
+    return await this.roomService.update(
+      updateRoomDto,
+      roomId,
+      file,
+      request['user'].id,
+    );
   }
 }

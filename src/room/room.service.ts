@@ -19,6 +19,7 @@ import {
   CACHE_KEY_ROOMS,
   CACHE_TTL,
 } from 'src/constants/cache';
+import { updateRoomDto } from './dto/update-room.dto';
 
 @Injectable()
 export class RoomService {
@@ -173,7 +174,7 @@ export class RoomService {
         data: roomDetail,
       };
     } catch (error) {
-      this.logger.error(`Get room detail error: ${error.message}`, error.stack);
+       this.logger.error(`Get room detail error: ${error.message}`, error.stack);
       if (
         error instanceof BadRequestException ||
         error instanceof NotFoundException
@@ -181,6 +182,51 @@ export class RoomService {
         throw error;
       }
       throw new BadRequestException('Cannot get room detail');
+    }
+  }
+  
+  async update(
+    updateRoomDto: updateRoomDto,
+    roomId: string,
+    file: Express.Multer.File,
+    staffId: string,
+  ) {
+    try {
+      const existingStaff = await this.staffRepository.exists({
+        where: { id: staffId },
+      });
+      if (!existingStaff) {
+        throw new NotFoundException('Staff not found');
+      }
+
+      const existingRoom = await this.roomRepository.findOne({
+        where: { id: roomId },
+      });
+      if (!existingRoom) {
+        throw new NotFoundException('Room not found');
+      }
+
+      updateRoomDto.image = file
+        ? `/public/uploads/${UploadFolder.ROOMS}/${file.filename}`
+        : '';
+      const result = await this.roomRepository.save({
+        ...existingRoom,
+        ...updateRoomDto,
+      });
+      return {
+        status: true,
+        message: 'Update room successfully',
+        data: result,
+      };
+    } catch (error) {
+      this.logger.error(`Update room error: ${error.message}`, error.stack);
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Cannot update room');
     }
   }
 }

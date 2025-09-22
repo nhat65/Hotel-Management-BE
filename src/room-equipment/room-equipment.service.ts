@@ -105,7 +105,7 @@ export class RoomEquipmentService {
       throw new BadRequestException('Cannot get equipments');
     }
   }
-  
+
   async update(updateEquipmentDto: UpdateEquipmentDto, equipmentId: string) {
     try {
       const existingEquipment = await this.roomEquipmentRepository.findOne({
@@ -143,6 +143,44 @@ export class RoomEquipmentService {
         throw error;
       }
       throw new BadRequestException('Cannot update equipment');
+    }
+  }
+
+  async detachEquipmentFromRoom(roomId: string, equipmentId: string) {
+    try {
+      const existingRoom = await this.roomRepository.findOne({
+        where: { id: roomId },
+      });
+      if (!existingRoom) {
+        throw new NotFoundException('Room not found');
+      }
+
+      const existingEquipment = await this.roomEquipmentRepository.findOne({
+        where: { id: equipmentId },
+      });
+      if (!existingEquipment) {
+        throw new NotFoundException('Equipment not found');
+      }
+
+      const result = await this.roomEquipmentRepository.save({
+        ...existingEquipment,
+        status: EquipmentStatus.AVAILABLE,
+        roomDetailId: null,
+      });
+      return {
+        status: true,
+        message: `Detach equipemnt from room ${existingRoom.number} successfully`,
+        data: result,
+      };
+    } catch (error) {
+      this.logger.error('Failed to detach room equipment', error.stack);
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Cannot detach equipment form room');
     }
   }
 }

@@ -47,7 +47,7 @@ export class RoomEquipment {
   note: string;
 
   @Column({ name: 'room_detail_id', nullable: true, type: 'uuid' })
-  roomDetailId: string;
+  roomDetailId: string | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

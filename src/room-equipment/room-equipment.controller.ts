@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RoomEquipmentService } from './room-equipment.service';
 import { Roles } from 'src/common/decorators/role.decorator';
@@ -7,6 +16,7 @@ import { RoomEquipmentDto } from './dto/room-equipment.dto';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { EquipmentStatus } from 'src/constants/enum';
 import { UpdateEquipmentDto } from './dto/update-equipment.dto';
+import { DetachEquipmentDto } from './dto/detach-equipment.dto';
 
 @Controller('room-equipment')
 @UseGuards(JwtAuthGuard)
@@ -36,6 +46,19 @@ export class RoomEquipmentController {
   ) {
     return await this.roomEquipmentService.update(
       updateEquipmentDto,
+      equipmentId,
+    );
+  }
+
+  @Patch('/:equipmentId/detach')
+  @Roles(AccountRole.ADMIN)
+  @UseGuards(RolesGuard)
+  async detach(
+    @Body() detachEquipmentDto: DetachEquipmentDto,
+    @Param('equipmentId') equipmentId: string,
+  ) {
+    return await this.roomEquipmentService.detachEquipmentFromRoom(
+      detachEquipmentDto.roomId,
       equipmentId,
     );
   }

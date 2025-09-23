@@ -65,3 +65,10 @@ export enum AttendanceStatus {
   LATE = 'late',
   ABSENT = 'absent',
 }
+
+export enum DiscountPercent {
+  PERCENT_5 = 5,
+  PERCENT_10 = 10,
+}
+
+export const tax = 5

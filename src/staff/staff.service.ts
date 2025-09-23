@@ -42,10 +42,9 @@ export class StaffService {
       if (cachedStaffs) {
         return {
           status: true,
-          message:
-            cachedStaffs.length
-              ? 'Get all staffs from cache successfully!'
-              : 'No staffs found in cache',
+          message: cachedStaffs.length
+            ? 'Get all staffs from cache successfully!'
+            : 'No staffs found in cache',
           data: cachedStaffs,
         };
       }
@@ -54,10 +53,9 @@ export class StaffService {
       await this.cacheManager.set(CACHE_KEY_ALL_STAFF, staffs, CACHE_TTL);
       return {
         status: true,
-        message:
-          staffs.length
-            ? 'Get all staffs from cache successfully!'
-            : 'No staffs found in cache',
+        message: staffs.length
+          ? 'Get all staffs from cache successfully!'
+          : 'No staffs found in cache',
         data: staffs,
       };
     } catch (error) {

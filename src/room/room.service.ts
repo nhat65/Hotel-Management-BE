@@ -145,7 +145,7 @@ export class RoomService {
         data: roomDetail,
       };
     } catch (error) {
-       this.logger.error(`Get room detail error: ${error.message}`, error.stack);
+      this.logger.error(`Get room detail error: ${error.message}`, error.stack);
       if (
         error instanceof BadRequestException ||
         error instanceof NotFoundException
@@ -155,7 +155,7 @@ export class RoomService {
       throw new BadRequestException('Cannot get room detail');
     }
   }
-  
+
   async update(
     updateRoomDto: updateRoomDto,
     roomId: string,

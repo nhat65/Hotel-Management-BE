@@ -12,6 +12,7 @@ import { RoomModule } from './room/room.module';
 import { RoomEquipmentModule } from './room-equipment/room-equipment.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
 import { InvoiceModule } from './invoice/invoice.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { InvoiceModule } from './invoice/invoice.module';
     RoomEquipmentModule,
     MaintenanceModule,
     InvoiceModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -71,4 +71,4 @@ export enum DiscountPercent {
   PERCENT_10 = 10,
 }
 
-export const tax = 5
+export const tax = 5;

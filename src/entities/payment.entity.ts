@@ -23,14 +23,17 @@ export class Payment {
   @Column({ type: 'enum', enum: PaymentMethod })
   method: PaymentMethod;
 
-  @Column({ name: 'amount_paid', type: 'bigint' })
-  amountPaid: bigint;
+  @Column({ name: 'amount_paid', type: 'decimal', precision: 8, scale: 2 })
+  amountPaid: number;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @Column({ name: 'invoice_id', type: 'uuid' })
+  invoiceId: string;
 
   @OneToOne(() => Invoice, (invoice) => invoice.payment)
   @JoinColumn({ name: 'invoice_id' })

@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { BookingHandlerService } from './booking.service';
 import { BookingDto } from './dto/booking.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
@@ -16,5 +24,19 @@ export class BookingController {
   @UseGuards(RolesGuard)
   async create(@Body() bookingDto: BookingDto, @Req() request: Request) {
     return await this.bookingService.booking(bookingDto, request['user'].id);
+  }
+
+  @Get('/')
+  @Roles(AccountRole.RECEPTIONIST, AccountRole.ADMIN)
+  @UseGuards(RolesGuard)
+  async getBookings() {
+    return await this.bookingService.getBookings();
+  }
+
+  @Get('/:bookingId')
+  @Roles(AccountRole.RECEPTIONIST, AccountRole.ADMIN)
+  @UseGuards(RolesGuard)
+  async getDetail(@Param('bookingId') bookingId: string) {
+    return await this.bookingService.getDetail(bookingId);
   }
 }

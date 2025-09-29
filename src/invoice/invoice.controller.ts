@@ -1,4 +1,12 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { InvoiceService } from './invoice.service';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { AccountRole } from 'src/entities/account.entity';
@@ -12,7 +20,7 @@ export class InvoiceController {
   constructor(private readonly invoiceService: InvoiceService) {}
 
   @Post('/create')
-  @Roles(AccountRole.ADMIN)
+  @Roles(AccountRole.ADMIN, AccountRole.RECEPTIONIST)
   @UseGuards(RolesGuard)
   async create(
     @Body() createInvoiceDto: CreateInvoiceDto,
@@ -22,5 +30,19 @@ export class InvoiceController {
       createInvoiceDto,
       request['user'].id,
     );
+  }
+
+  @Get('/:invoiceId')
+  @Roles(AccountRole.ADMIN, AccountRole.RECEPTIONIST)
+  @UseGuards(RolesGuard)
+  async getDetail(@Param('invoiceId') invoiceId: string) {
+    return await this.invoiceService.getDetail(invoiceId);
+  }
+
+  @Get('/')
+  @Roles(AccountRole.ADMIN, AccountRole.RECEPTIONIST)
+  @UseGuards(RolesGuard)
+  async getInvoices() {
+    return await this.invoiceService.getInvoices();
   }
 }

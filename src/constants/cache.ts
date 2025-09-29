@@ -5,3 +5,6 @@ export const CACHE_TTL = 3600 * 1000;
 export const CACHE_KEY_ROOMS = 'rooms_status:';
 export const CACHE_KEY_ROOM_DETAIL = 'room:';
 export const CACHE_KEY_EQUIPMENTS = 'equipments_status:';
+
+export const CACHE_KEY_BOOKINGS = 'all_booking';
+export const CACHE_KEY_BOOKINGS_DETAIL = 'booking:';

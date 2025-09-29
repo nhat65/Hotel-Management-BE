@@ -196,7 +196,7 @@ export class AuthService {
     };
 
     return this.jwtService.sign(payload, {
-      expiresIn: '15m',
+      expiresIn: '1d',
       secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
     });
   }

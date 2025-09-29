@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   Logger,
   NotFoundException,
@@ -15,6 +16,12 @@ import { BookingDetail } from 'src/entities/booking-detail.entity';
 import { BookingRoom } from 'src/entities/booking-room.entity';
 import { Service } from 'src/entities/service.entity';
 import { BookingService } from 'src/entities/booking-service.entity';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import {
+  CACHE_KEY_BOOKINGS,
+  CACHE_KEY_BOOKINGS_DETAIL,
+  CACHE_TTL,
+} from 'src/constants/cache';
 
 @Injectable()
 export class BookingHandlerService {
@@ -35,6 +42,8 @@ export class BookingHandlerService {
     @InjectRepository(BookingService)
     private readonly bookingServiceRepository: Repository<BookingService>,
     private readonly dataSource: DataSource,
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: Cache,
   ) {}
 
   async booking(bookingDto: BookingDto, staffId: string) {
@@ -194,6 +203,93 @@ export class BookingHandlerService {
         throw error;
       }
       throw new BadRequestException('Cannot booking');
+    }
+  }
+
+  async getBookings() {
+    try {
+      const cachedBookings =
+        await this.cacheManager.get<any[]>(CACHE_KEY_BOOKINGS);
+      if (cachedBookings) {
+        return {
+          status: true,
+          message: cachedBookings.length
+            ? `Get booking from cache successfully!`
+            : 'No booking found',
+          data: cachedBookings,
+        };
+      }
+
+      const bookings = await this.bookingRepository.find({
+        relations: { bookingDetails: { bookingRooms: { room: true } } },
+        order: { createdAt: 'DESC' },
+      });
+      await this.cacheManager.set(CACHE_KEY_BOOKINGS, bookings, CACHE_TTL);
+      return {
+        status: true,
+        message: bookings.length
+          ? `Get bookings successfully!`
+          : 'No bookings found',
+        data: bookings,
+      };
+    } catch (error) {
+      this.logger.error(`Get bookings error: ${error.message}`, error.stack);
+      throw new BadRequestException('Cannot get services');
+    }
+  }
+
+  async getDetail(bookingId: string) {
+    try {
+      const cachedBookingDetail = await this.cacheManager.get<any[]>(
+        CACHE_KEY_BOOKINGS_DETAIL + bookingId,
+      );
+      if (cachedBookingDetail) {
+        return {
+          status: true,
+          message: cachedBookingDetail.length
+            ? 'Get booking detail from cache successfully!'
+            : 'No booking detail found in cache',
+          data: cachedBookingDetail,
+        };
+      }
+
+      const booking = await this.bookingRepository.findOne({
+        where: { id: bookingId },
+        relations: {
+          bookingDetails: {
+            bookingRooms: { room: true },
+            bookingServices: { service: true },
+            invoice: true,
+          },
+          createdByStaff: true,
+        },
+      });
+      if (!booking) {
+        throw new NotFoundException('Booking not found');
+      }
+      await this.cacheManager.set(
+        CACHE_KEY_BOOKINGS_DETAIL + bookingId,
+        booking,
+        CACHE_TTL,
+      );
+
+      return {
+        status: true,
+        message: 'Get booking detail successfully',
+        data: booking,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Get booking detail error: ${error.message}`,
+        error.stack,
+      );
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Cannot get booking detail');
     }
   }
 }

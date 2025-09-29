@@ -55,15 +55,15 @@ export class PaymentService {
       if (createPaymentDto.method === PaymentMethod.BANK_TRANSFER) {
         var momoPay: any;
         const momoPayload = {
-          amount: Number(existingInvoice.totalAmount),
+          totalAmount: Number(existingInvoice.totalAmount),
           orderInfor: `bill payment for ${createPaymentDto.invoiceId}`,
+          invoiceId: createPaymentDto.invoiceId,
         };
         momoPay = await this.momoPayment(momoPayload);
-        const result = await this.paymentRepository.save(paymentPayload);
         return {
           status: true,
           message: 'Create payment successfully',
-          data: { ...momoPay, ...result },
+          data: momoPay,
         };
       }
 
@@ -85,21 +85,26 @@ export class PaymentService {
     }
   }
 
-  async momoPayment(momoPayload: any) {
+  async momoPayment(momoPayload: {
+    totalAmount: number;
+    orderInfor: string;
+    invoiceId: string;
+  }) {
     try {
       const accessKey = 'F8BBA842ECF85';
       const secretKey = 'K951B6PE1waDMi640xX08PD3vg6EkVlz';
       const orderInfo = momoPayload.orderInfor;
       const partnerCode = 'MOMO';
-      const redirectUrl =
-        'https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b';
-      const ipnUrl =
-        'https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b';
+      const redirectUrl = 'https://google.com';
+      const ipnUrl = 'https://2329172d1f93.ngrok-free.app/payment/momo-ipn';
       const requestType = 'payWithMethod';
-      const amount = momoPayload.amount;
+      const amount = momoPayload.totalAmount;
       const orderId = partnerCode + new Date().getTime();
       const requestId = orderId;
-      const extraData = '';
+      const extraPayload = { invoiceId: momoPayload.invoiceId, amount };
+      const extraData = Buffer.from(JSON.stringify(extraPayload)).toString(
+        'base64',
+      );
       const paymentCode =
         'T8Qii53fAXyUftPV3m9ysyRhEanUs9KlOPfHgpMR0ON50U10Bh+vZdpJU7VY4z+Z2y77fJHkoDc69scwwzLuW5MzeUKTwPo3ZMaB29imm6YulqnWfTkgzqRaion+EuD7FN9wZ4aXE1+mRt0gHsU193y+yxtRgpmY7SDMU9hCKoQtYyHsfFR5FUAOAKMdw2fzQqpToei3rnaYvZuYaxolprm9+/+WIETnPUDlxCYOiw7vPeaaYQQH0BF0TxyU3zu36ODx980rJvPAgtJzH1gUrlxcSS1HQeQ9ZaVM1eOK/jl8KJm6ijOwErHGbgf/hVymUQG65rHU2MWz9U8QUjvDWA==';
 
@@ -146,6 +151,60 @@ export class PaymentService {
         throw error;
       }
       throw new BadRequestException('Cannot create payment');
+    }
+  }
+
+  async resolveSuccessPayment(data: { invoiceId: string; amount: number }) {
+    try {
+      const existingInvoice = await this.invoiceRepository.exists({
+        where: { id: data.invoiceId },
+      });
+      if (!existingInvoice) {
+        throw new NotFoundException('Invoice not found');
+      }
+
+      const paymentPayload: Partial<Payment> = {
+        invoiceId: data.invoiceId,
+        amountPaid: data.amount,
+        method: PaymentMethod.BANK_TRANSFER,
+      };
+
+      await this.paymentRepository.save(paymentPayload);
+    } catch (error) {
+      this.logger.error(
+        `Resolve success payment error: ${error.message}`,
+        error.stack,
+      );
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Cannot resolve success payment');
+    }
+  }
+  
+  async checkPaid(invoiceId: string) {
+    try {
+      const paid = await this.paymentRepository.exists({
+        where: { invoiceId },
+      });
+      if (paid) {
+        return {
+          status: true,
+          message: 'the bill has been paid',
+        };
+      }
+      return {
+        status: false,
+      };
+    } catch (error) {
+      this.logger.error(`Check paid error: ${error.message}`, error.stack);
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException('Cannot check paid');
     }
   }
 }

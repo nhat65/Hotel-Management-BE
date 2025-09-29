@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   Logger,
   NotFoundException,
@@ -12,6 +13,12 @@ import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { Staff } from 'src/entities/staff.entity';
 import { BookingRoom } from 'src/entities/booking-room.entity';
 import { tax } from 'src/constants/enum';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import {
+  CACHE_KEY_INVOICES,
+  CACHE_KEY_INVOICES_DETAIL,
+  CACHE_TTL,
+} from 'src/constants/cache';
 
 @Injectable()
 export class InvoiceService {
@@ -25,6 +32,8 @@ export class InvoiceService {
     private readonly bookingRoomRepository: Repository<BookingRoom>,
     @InjectRepository(BookingDetail)
     private readonly bookingDetailRepository: Repository<BookingDetail>,
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: Cache,
   ) {}
 
   async create(createInvoiceDto: CreateInvoiceDto, staffId: string) {
@@ -90,6 +99,84 @@ export class InvoiceService {
         throw error;
       }
       throw new BadRequestException('Cannot create invoice');
+    }
+  }
+
+  async getDetail(invoiceId: string) {
+    try {
+      const cachedInvoiceDetail = await this.cacheManager.get<any[]>(
+        CACHE_KEY_INVOICES_DETAIL + invoiceId,
+      );
+      if (cachedInvoiceDetail) {
+        return {
+          status: true,
+          message: cachedInvoiceDetail.length
+            ? 'Get invoice detail from cache successfully!'
+            : 'No invoice detail found in cache',
+          data: cachedInvoiceDetail,
+        };
+      }
+
+      const invoice = await this.invoiceRepository.findOne({
+        where: { id: invoiceId },
+      });
+      if (!invoice) {
+        throw new NotFoundException('Invoice not found');
+      }
+      await this.cacheManager.set(
+        CACHE_KEY_INVOICES_DETAIL + invoiceId,
+        invoice,
+        CACHE_TTL,
+      );
+      return {
+        status: true,
+        message: 'Get invoice detail successfully',
+        data: invoice,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Get invoice detail error: ${error.message}`,
+        error.stack,
+      );
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Cannot get invoice detail');
+    }
+  }
+
+  async getInvoices() {
+    try {
+      const cachedInvoices =
+        await this.cacheManager.get<any[]>(CACHE_KEY_INVOICES);
+      if (cachedInvoices) {
+        return {
+          status: true,
+          message: cachedInvoices.length
+            ? `Get invoices from cache successfully!`
+            : 'No invoices found',
+          data: cachedInvoices,
+        };
+      }
+
+      const invoices = await this.invoiceRepository.find({
+        relations: { payment: true },
+        order: { createdAt: 'DESC' },
+      });
+      await this.cacheManager.set(CACHE_KEY_INVOICES, invoices, CACHE_TTL);
+      return {
+        status: true,
+        message: invoices.length
+          ? `Get invoices successfully!`
+          : 'No invoices found',
+        data: invoices,
+      };
+    } catch (error) {
+      this.logger.error(`Get invoices error: ${error.message}`, error.stack);
+      throw new BadRequestException('Cannot get invoices');
     }
   }
 }

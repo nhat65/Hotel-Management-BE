@@ -8,3 +8,6 @@ export const CACHE_KEY_EQUIPMENTS = 'equipments_status:';
 
 export const CACHE_KEY_BOOKINGS = 'all_booking';
 export const CACHE_KEY_BOOKINGS_DETAIL = 'booking:';
+
+export const CACHE_KEY_INVOICES = 'all_invoice';
+export const CACHE_KEY_INVOICES_DETAIL = 'invoice:';

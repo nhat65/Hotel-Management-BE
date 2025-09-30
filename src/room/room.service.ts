@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Room, RoomStatus } from 'src/entities/room.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { Staff } from 'src/entities/staff.entity';
 import { Multer } from 'multer';
@@ -33,6 +33,7 @@ export class RoomService {
     private readonly equipmentRepository: Repository<RoomEquipment>,
     @Inject(CACHE_MANAGER)
     private readonly cacheManager: Cache,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(
@@ -41,29 +42,57 @@ export class RoomService {
     file: Express.Multer.File,
   ) {
     try {
-      const existingStaff = await this.staffRepository.exists({
-        where: { id: staffId },
-      });
-      if (!existingStaff) {
-        throw new NotFoundException('Staff not found');
-      }
+      return await this.dataSource.transaction(
+        async (transactionalEntityManager) => {
+          const existingStaff = await transactionalEntityManager
+            .getRepository(Staff)
+            .exists({
+              where: { id: staffId },
+            });
+          if (!existingStaff) {
+            throw new NotFoundException('Staff not found');
+          }
 
-      const existingRoom = await this.roomRepository.exists({
-        where: { number: createRoomDto.number },
-      });
-      if (existingRoom) {
-        throw new NotFoundException('Room number is existed');
-      }
+          const existingRoom = await transactionalEntityManager
+            .getRepository(Room)
+            .exists({
+              where: { number: createRoomDto.number },
+            });
+          if (existingRoom) {
+            throw new NotFoundException('Room number is existed');
+          }
 
-      createRoomDto.image = file
-        ? `/public/uploads/${UploadFolder.ROOMS}/${file.filename}`
-        : '';
-      const result = await this.roomRepository.save(createRoomDto);
-      return {
-        status: true,
-        message: 'Create room successfully',
-        data: result,
-      };
+          createRoomDto.image = file
+            ? `/public/uploads/${UploadFolder.ROOMS}/${file.filename}`
+            : '';
+          const result = await transactionalEntityManager
+            .getRepository(Room)
+            .save(createRoomDto);
+
+          if (createRoomDto.equipmentIds?.length) {
+            for (const equipment of createRoomDto.equipmentIds) {
+              const existingEquipment = await transactionalEntityManager
+                .getRepository(RoomEquipment)
+                .findOne({
+                  where: { id: equipment.id },
+                });
+              if (!existingEquipment) {
+                throw new NotFoundException(
+                  `Equipment "${equipment.name}" not found`,
+                );
+              }
+              await transactionalEntityManager
+                .getRepository(RoomEquipment)
+                .save({ ...existingEquipment, roomDetailId: result.id });
+            }
+          }
+          return {
+            status: true,
+            message: 'Create room successfully',
+            data: result,
+          };
+        },
+      );
     } catch (error) {
       this.logger.error(`Create room error: ${error.message}`, error.stack);
       if (

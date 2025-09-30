@@ -29,7 +29,7 @@ export class RoomController {
 
   @Post('/create')
   @UseInterceptors(UploadImageInterceptor('image', UploadFolder.ROOMS))
-  @Roles(AccountRole.ADMIN)
+  @Roles(AccountRole.ADMIN, AccountRole.RECEPTIONIST)
   @UseGuards(RolesGuard)
   async create(
     @Body() createRoomDto: CreateRoomDto,

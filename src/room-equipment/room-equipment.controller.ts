@@ -24,14 +24,14 @@ export class RoomEquipmentController {
   constructor(private readonly roomEquipmentService: RoomEquipmentService) {}
 
   @Post('/create')
-  @Roles(AccountRole.ADMIN)
+  @Roles(AccountRole.ADMIN, AccountRole.RECEPTIONIST)
   @UseGuards(RolesGuard)
   async create(@Body() roomEquipmentDto: RoomEquipmentDto) {
     return await this.roomEquipmentService.create(roomEquipmentDto);
   }
 
   @Get('/:status')
-  @Roles(AccountRole.ADMIN)
+  @Roles(AccountRole.ADMIN, AccountRole.RECEPTIONIST)
   @UseGuards(RolesGuard)
   async getEquipments(@Param('status') status: EquipmentStatus) {
     return await this.roomEquipmentService.getEquipments(status);

@@ -184,7 +184,7 @@ export class PaymentService {
       throw new BadRequestException('Cannot resolve success payment');
     }
   }
-  
+
   async checkPaid(invoiceId: string) {
     try {
       const paid = await this.paymentRepository.exists({

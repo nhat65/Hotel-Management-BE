@@ -11,3 +11,6 @@ export const CACHE_KEY_BOOKINGS_DETAIL = 'booking:';
 
 export const CACHE_KEY_INVOICES = 'all_invoice';
 export const CACHE_KEY_INVOICES_DETAIL = 'invoice:';
+
+export const CACHE_KEY_SERVICES = 'all_service';
+export const CACHE_KEY_SERVICE_DETAIL = 'service:';

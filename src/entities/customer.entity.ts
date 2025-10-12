@@ -18,7 +18,7 @@ export class Customer {
   fullName: string;
 
   @Column({ name: 'phone_number', type: 'int' })
-  phoneNumber: bigint;
+  phoneNumber: string;
 
   @Column({ name: 'date_of_birth', type: 'date' })
   dateOfBirth: Date;

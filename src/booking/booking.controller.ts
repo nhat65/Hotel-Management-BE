@@ -13,6 +13,7 @@ import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { AccountRole } from 'src/entities/account.entity';
 import { Roles } from 'src/common/decorators/role.decorator';
+import { CheckinDto } from './dto/checkin.dto';
 
 @Controller('booking')
 @UseGuards(JwtAuthGuard)
@@ -24,6 +25,13 @@ export class BookingController {
   @UseGuards(RolesGuard)
   async create(@Body() bookingDto: BookingDto, @Req() request: Request) {
     return await this.bookingService.booking(bookingDto, request['user'].id);
+  }
+
+  @Post('/checkin')
+  @Roles(AccountRole.RECEPTIONIST)
+  @UseGuards(RolesGuard)
+  async checkin(@Body() checkinDto: CheckinDto, @Req() request: Request) {
+    return await this.bookingService.checkin(checkinDto, request['user'].id);
   }
 
   @Get('/')

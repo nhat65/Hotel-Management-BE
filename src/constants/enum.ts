@@ -72,3 +72,5 @@ export enum DiscountPercent {
 }
 
 export const tax = 5;
+
+export const ZERO = 0;

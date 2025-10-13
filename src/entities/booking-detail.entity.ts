@@ -6,6 +6,8 @@ import {
   PrimaryGeneratedColumn,
   JoinColumn,
   OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Booking } from './booking.entity';
 import { Invoice } from './invoice.entity';
@@ -50,4 +52,10 @@ export class BookingDetail {
     (bookingService) => bookingService.bookingDetail,
   )
   bookingServices: BookingService[];
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }

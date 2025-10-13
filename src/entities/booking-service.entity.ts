@@ -1,9 +1,11 @@
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { BookingDetail } from './booking-detail.entity';
 import { Room } from './room.entity';
@@ -36,4 +38,10 @@ export class BookingService {
   @ManyToOne(() => Service, (service) => service.bookingServices)
   @JoinColumn({ name: 'service_id', referencedColumnName: 'id' })
   service: Service;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }

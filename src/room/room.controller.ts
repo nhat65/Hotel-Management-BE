@@ -21,6 +21,7 @@ import { UploadFolder } from 'src/constants/upload.constants';
 import { UploadImageInterceptor } from 'src/common/interceptors/upload-file.interceptor';
 import { RoomStatus } from 'src/constants/enum';
 import { updateRoomDto } from './dto/update-room.dto';
+import { SearchRoomDto } from './dto/search-room.dto';
 
 @Controller('room')
 @UseGuards(JwtAuthGuard)
@@ -73,5 +74,12 @@ export class RoomController {
       file,
       request['user'].id,
     );
+  }
+
+  @Post('search')
+  @Roles(AccountRole.ADMIN, AccountRole.RECEPTIONIST)
+  @UseGuards(RolesGuard)
+  async search(@Body() searchRoomDto: SearchRoomDto) {
+    return await this.roomService.search(searchRoomDto);
   }
 }

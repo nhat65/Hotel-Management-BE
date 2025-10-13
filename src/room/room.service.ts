@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Room, RoomStatus } from 'src/entities/room.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, MoreThanOrEqual, Repository } from 'typeorm';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { Staff } from 'src/entities/staff.entity';
 import { Multer } from 'multer';
@@ -20,6 +20,7 @@ import {
   CACHE_TTL,
 } from 'src/constants/cache';
 import { updateRoomDto } from './dto/update-room.dto';
+import { SearchRoomDto } from './dto/search-room.dto';
 
 @Injectable()
 export class RoomService {
@@ -227,6 +228,50 @@ export class RoomService {
         throw error;
       }
       throw new BadRequestException('Cannot update room');
+    }
+  }
+
+  async search(searchRoomDto: SearchRoomDto) {
+    const checkIn = new Date(searchRoomDto.actualCheckIn);
+    const checkOut = new Date(searchRoomDto.actualCheckOut);
+    try {
+      const rooms = await this.roomRepository.find({
+        where: {
+          ...(searchRoomDto.capacity && {
+            capacity: MoreThanOrEqual(searchRoomDto.capacity),
+          }),
+          ...(searchRoomDto.type && { type: searchRoomDto.type }),
+          status: RoomStatus.AVAILABLE,
+        },
+        relations: {
+          bookingRooms: {
+            bookingDetail: true,
+          },
+          equipments: true,
+        },
+      });
+
+      const availableRooms = rooms.filter((room) => {
+        return room.bookingRooms.every((bookingRoom) => {
+          const detail = bookingRoom.bookingDetail;
+          if (!detail) return true;
+
+          const bookedCheckIn = new Date(detail.actualCheckIn);
+          const bookedCheckOut = new Date(detail.actualCheckOut);
+
+          return bookedCheckOut <= checkIn || bookedCheckIn >= checkOut;
+        });
+      });
+      return {
+        status: true,
+        message: availableRooms.length
+          ? 'Found available rooms'
+          : 'No available room found',
+        data: availableRooms,
+      };
+    } catch (error) {
+      this.logger.error(`Search room error: ${error.message}`, error.stack);
+      throw new BadRequestException('Cannot search room');
     }
   }
 }

@@ -7,7 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Booking } from 'src/entities/booking.entity';
+import { Booking, BookingStatus } from 'src/entities/booking.entity';
 import { DataSource, In, Repository } from 'typeorm';
 import { BookingDto } from './dto/booking.dto';
 import { Staff } from 'src/entities/staff.entity';
@@ -22,6 +22,8 @@ import {
   CACHE_KEY_BOOKINGS_DETAIL,
   CACHE_TTL,
 } from 'src/constants/cache';
+import { CheckinDto } from './dto/checkin.dto';
+import { Customer } from 'src/entities/customer.entity';
 
 @Injectable()
 export class BookingHandlerService {
@@ -41,6 +43,8 @@ export class BookingHandlerService {
     private readonly serviceRepository: Repository<Service>,
     @InjectRepository(BookingService)
     private readonly bookingServiceRepository: Repository<BookingService>,
+    @InjectRepository(Customer)
+    private readonly customerRepository: Repository<Customer>,
     private readonly dataSource: DataSource,
     @Inject(CACHE_MANAGER)
     private readonly cacheManager: Cache,
@@ -290,6 +294,70 @@ export class BookingHandlerService {
         throw error;
       }
       throw new BadRequestException('Cannot get booking detail');
+    }
+  }
+
+  async checkin(checkinDto: CheckinDto, staffId: string) {
+    try {
+      return await this.dataSource.transaction(
+        async (transactionalEntityManager) => {
+          const existingStaff = await transactionalEntityManager
+            .getRepository(Staff)
+            .exists({
+              where: { id: staffId },
+            });
+          if (!existingStaff) {
+            throw new NotFoundException('Staff not found');
+          }
+
+          const existingBooking = await transactionalEntityManager
+            .getRepository(Booking)
+            .findOne({
+              where: {
+                id: checkinDto.bookingId,
+                status: BookingStatus.PENDING,
+              },
+            });
+          if (!existingBooking) {
+            throw new NotFoundException('Booking not found or already checkin');
+          }
+
+          if (checkinDto.customers?.length === existingBooking.totalGuest) {
+            for (const customer of checkinDto.customers) {
+              const addedCustomer = await transactionalEntityManager
+                .getRepository(Customer)
+                .save({ ...customer, bookingId: checkinDto.bookingId });
+              if (!addedCustomer) {
+                throw new ConflictException(
+                  `Cannot add customer ${customer.fullName} - ${customer.identify}`,
+                );
+              }
+            }
+          } else {
+            throw new ConflictException(
+              `The total number of customers is ${existingBooking.totalGuest} but the customers information provided is only ${checkinDto.customers?.length}`,
+            );
+          }
+
+          await transactionalEntityManager
+            .getRepository(Booking)
+            .save({ ...existingBooking, status: BookingStatus.CHECKED_IN });
+          return {
+            status: true,
+            message: 'Checkin successfully',
+          };
+        },
+      );
+    } catch (error) {
+      this.logger.error(`Checkin error: ${error.message}`, error.stack);
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException ||
+        error instanceof ConflictException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Cannot checkin');
     }
   }
 }

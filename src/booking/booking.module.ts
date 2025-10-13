@@ -10,6 +10,7 @@ import { Room } from 'src/entities/room.entity';
 import { BookingRoom } from 'src/entities/booking-room.entity';
 import { Service } from 'src/entities/service.entity';
 import { BookingService } from 'src/entities/booking-service.entity';
+import { Customer } from 'src/entities/customer.entity';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { BookingService } from 'src/entities/booking-service.entity';
       BookingRoom,
       Service,
       BookingService,
+      Customer,
     ]),
     JwtModule.register({}),
   ],

@@ -14,6 +14,7 @@ import { MaintenanceModule } from './maintenance/maintenance.module';
 import { InvoiceModule } from './invoice/invoice.module';
 import { PaymentModule } from './payment/payment.module';
 import { ChatbotModule } from './chatbot/chatbot.module';
+import { ServiceModule } from './service/service.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { ChatbotModule } from './chatbot/chatbot.module';
     InvoiceModule,
     PaymentModule,
     ChatbotModule,
+    ServiceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

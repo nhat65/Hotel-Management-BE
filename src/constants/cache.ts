@@ -1,0 +1,16 @@
+export const CACHE_KEY_ALL_STAFF = 'all_staff';
+export const CACHE_KEY_STAFF_PROFILE = 'staff_profile:';
+export const CACHE_TTL = 3600 * 1000;
+
+export const CACHE_KEY_ROOMS = 'rooms_status:';
+export const CACHE_KEY_ROOM_DETAIL = 'room:';
+export const CACHE_KEY_EQUIPMENTS = 'equipments_status:';
+
+export const CACHE_KEY_BOOKINGS = 'all_booking';
+export const CACHE_KEY_BOOKINGS_DETAIL = 'booking:';
+
+export const CACHE_KEY_INVOICES = 'all_invoice';
+export const CACHE_KEY_INVOICES_DETAIL = 'invoice:';
+
+export const CACHE_KEY_SERVICES = 'all_service';
+export const CACHE_KEY_SERVICE_DETAIL = 'service:';
